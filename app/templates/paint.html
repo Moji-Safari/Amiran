@@ -1,0 +1,44 @@
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Paint</title>
+  </head>
+  <body>
+    <h1>Add a Paint</h1>
+
+    <form action="/paints/add" method="POST">
+      <div>
+        <label for="name">Paint Name:</label>
+        <input type="text" id="name" name="name" maxlength="100" required />
+      </div>
+
+      <br />
+
+      <div>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required />
+      </div>
+
+      <br />
+
+      <div>
+        <label for="painter_id">Painter ID:</label>
+        <input
+          type="number"
+          id="painter_id"
+          name="painter_id"
+          min="1"
+          required
+        />
+      </div>
+
+      <br />
+
+      <button type="submit">Add Paint</button>
+    </form>
+  </body>
+</html>
+```
