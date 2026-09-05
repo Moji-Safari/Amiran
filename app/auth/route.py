@@ -32,12 +32,12 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 ROLE_GUEST = 5
 ROLE_MEMBER = 15
-ROLE_ADMIN = 20
+ROLE_LIBRARIAN = 20
 
 _VALID_ROLES = (
     ROLE_GUEST,
     ROLE_MEMBER,
-    ROLE_ADMIN,
+    ROLE_LIBRARIAN,
 )
 
 
@@ -619,7 +619,7 @@ def member_area():
 
 
 @auth_bp.route("/admin-area", methods=["GET"])
-@role_required(ROLE_ADMIN)
+@role_required(ROLE_LIBRARIAN)
 def admin_area():
 
     return jsonify(
