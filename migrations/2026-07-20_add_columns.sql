@@ -1,0 +1,7 @@
+ALTER TABLE Members
+ADD COLUMN user_id INT UNIQUE
+REFERENCES Users(user_id);
+
+ALTER TABLE Librarian
+ADD COLUMN user_id INT UNIQUE
+REFERENCES Users(user_id);
