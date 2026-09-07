@@ -1,4 +1,5 @@
 from flask import current_app, jsonify
+from werkzeug.exceptions import RequestEntityTooLarge
 
 
 def register_error_handlers(app):
@@ -69,3 +70,12 @@ def register_error_handlers(app):
                 "code": 500,
             }
         ), 500
+
+    
+
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_file_too_large(error):
+        return {
+        "error": "File is too large. Maximum size is 5 MB."
+        }, 413

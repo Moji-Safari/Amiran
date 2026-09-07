@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.auth.route import ROLE_LIBRARIAN, ROLE_MEMBER, role_required
+from app.utils.validator import validate_borrow_request
 from db.database import get_db
 
 loan_bp = Blueprint("loan", __name__, url_prefix="/loan")
@@ -197,8 +198,15 @@ def borrow_book():
     if member is None:
         return {"error": "Member not found"}, 404
 
+    data = request.get_json(silent=True)
+
+    error = validate_borrow_request(data)
+
+    if error:
+        return {"error": error}, 400
+
     member_id = member["memb_id"]
-    user_branch = member["branch_id"]
+    
 
     data = request.get_json()
 
