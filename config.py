@@ -3,7 +3,7 @@ import os
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-in-production")
+   
     DEBUG = False
     TESTING = False
 
@@ -23,9 +23,6 @@ class Config:
     # ─────────────────────────────────────────────
     # Database Connection Pool
     # ─────────────────────────────────────────────
-
-    DB_POOL_MIN = os.getenv("DB_POOL_MIN", "1")
-    DB_POOL_MAX = os.getenv("DB_POOL_MAX", "10")
 
     # ─────────────────────────────────────────────
     # JWT
@@ -88,7 +85,7 @@ class Config:
             "DB_PORT",
             "DB_POOL_MIN",
             "DB_POOL_MAX",
-            "JWT_ACCESS_TOKEN_EXPIRES",
+            
         ]
 
         for field in integer_fields:
@@ -150,4 +147,3 @@ UPLOAD_FOLDER = os.path.join(
     "book_covers",
 )
 
-MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB

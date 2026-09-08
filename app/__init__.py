@@ -17,7 +17,7 @@ def create_app():
     register_error_handlers(app)
     setup_logging(app)
 
-    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-    app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
+    
+    
 
     return app
