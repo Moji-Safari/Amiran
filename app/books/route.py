@@ -1,62 +1,45 @@
-
-import os
-import uuid
-
 from flask import Blueprint, current_app, request
 from flask_jwt_extended import jwt_required
+from app.auth.route import ROLE_LIBRARIAN, ROLE_MEMBER, role_required
 
-from app.utils.validator import save_cover, validate_cover
-from auth.decorators import role_required
-from auth.constants import ROLE_LIBRARIAN
-from db.database import get_db
-
-
-book_bp = Blueprint("books", __name__, url_prefix="/books")
-
-
-ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
-
-ALLOWED_MIME_TYPES = {
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-}
+from app.auth.constants import ROLE_LIBRARIAN
+from app.auth.decorators import role_required
+from app.utils.file_storage import save_cover
+from app.utils.validator import validate_cover
+from app.db.database import get_db
 
 
-def get_extension(filename):
-    """
-    Return the file extension without the dot.
-    """
-    if "." not in filename:
-        return None
-
-    return filename.rsplit(".", 1)[1].lower()
-
-
+book_bp = Blueprint(
+    "books",
+    __name__,
+    url_prefix="/books",
+)
 
 
 # ---------------------------------------------------------
 # CREATE
 # ---------------------------------------------------------
 
-@book_bp.route("/create", methods=["POST"])
+@book_bp.route("/", methods=["POST"])
 @jwt_required()
 @role_required(ROLE_LIBRARIAN)
 def create_book():
 
     title = request.form.get("title")
     isbn = request.form.get("isbn")
-    publc_yr = request.form.get("publication_year", type=int)
-    genre=request.form.get("genre")
-
+    publication_year = request.form.get(
+        "publication_year",
+        type=int,
+    )
+    genre = request.form.get("genre")
 
     if not title:
         return {"error": "title is required"}, 400
 
     if len(title) > 255:
-        return {"error": "title must be at most 255 characters"}, 400
-
-    
+        return {
+            "error": "title must be at most 255 characters"
+        }, 400
 
     cover = request.files.get("cover")
 
@@ -79,18 +62,16 @@ def create_book():
                         publication_year,
                         genre,
                         cover_path
-
                     )
-                    VALUES (%s, %s, %s,%s,%s)
+                    VALUES (%s, %s, %s, %s, %s)
                     RETURNING book_id
                     """,
                     (
                         title,
                         isbn,
-                        publc_yr,
+                        publication_year,
                         genre,
-                        cover_filename
-
+                        cover_filename,
                     ),
                 )
 
@@ -104,6 +85,10 @@ def create_book():
         }, 201
 
     except Exception:
+        current_app.logger.exception(
+            "Failed to create book"
+        )
+
         return {
             "error": "Failed to create book"
         }, 500
@@ -113,7 +98,7 @@ def create_book():
 # READ ALL
 # ---------------------------------------------------------
 
-@book_bp.route("/find/lst", methods=["GET"])
+@book_bp.route("/", methods=["GET"])
 @jwt_required()
 def get_books():
 
@@ -126,6 +111,10 @@ def get_books():
                     SELECT
                         book_id,
                         title,
+                        isbn,
+                        publication_year,
+                        genre,
+                        added_at,
                         cover_path
                     FROM books
                     ORDER BY book_id
@@ -139,6 +128,10 @@ def get_books():
         }, 200
 
     except Exception:
+        current_app.logger.exception(
+            "Failed to retrieve books"
+        )
+
         return {
             "error": "Failed to retrieve books"
         }, 500
@@ -148,7 +141,7 @@ def get_books():
 # READ ONE
 # ---------------------------------------------------------
 
-@book_bp.route("/find/<int:book_id>", methods=["GET"])
+@book_bp.route("/<int:book_id>", methods=["GET"])
 @jwt_required()
 def get_book(book_id):
 
@@ -161,6 +154,10 @@ def get_book(book_id):
                     SELECT
                         book_id,
                         title,
+                        isbn,
+                        publication_year,
+                        genre,
+                        added_at,
                         cover_path
                     FROM books
                     WHERE book_id = %s
@@ -171,11 +168,17 @@ def get_book(book_id):
                 book = cur.fetchone()
 
         if book is None:
-            return {"error": "Book not found"}, 404
+            return {
+                "error": "Book not found"
+            }, 404
 
         return book, 200
 
     except Exception:
+        current_app.logger.exception(
+            "Failed to retrieve book"
+        )
+
         return {
             "error": "Failed to retrieve book"
         }, 500
@@ -185,43 +188,63 @@ def get_book(book_id):
 # UPDATE
 # ---------------------------------------------------------
 
-@book_bp.route("/update/<int:book_id>", methods=["PATCH"])
+@book_bp.route("/<int:book_id>", methods=["PATCH"])
 @jwt_required()
 @role_required(ROLE_LIBRARIAN)
 def update_book(book_id):
 
     title = request.form.get("title")
-    author_id = request.form.get("author_id", type=int)
+    isbn = request.form.get("isbn")
+    publication_year = request.form.get(
+        "publication_year",
+        type=int,
+    )
+    genre = request.form.get("genre")
+
     cover = request.files.get("cover")
+
+    # ---------------------------------------------
+    # Validate supplied fields
+    # ---------------------------------------------
 
     if title is not None:
 
         if not title:
-            return {"error": "title cannot be empty"}, 400
+            return {
+                "error": "title cannot be empty"
+            }, 400
 
         if len(title) > 255:
             return {
                 "error": "title must be at most 255 characters"
             }, 400
 
-    if author_id is not None and author_id <= 0:
-        return {
-            "error": "author_id must be a positive integer"
-        }, 400
+    if publication_year is not None:
+
+        if publication_year <= 0:
+            return {
+                "error": "publication_year must be positive"
+            }, 400
 
     if cover is not None:
 
         error = validate_cover(cover)
 
         if error:
-            return {"error": error}, 400
+            return {
+                "error": error
+            }, 400
 
     try:
 
         with get_db() as conn:
+
             with conn.cursor() as cur:
 
+                # ---------------------------------------------
                 # Check that book exists
+                # ---------------------------------------------
+
                 cur.execute(
                     """
                     SELECT cover_path
@@ -234,19 +257,34 @@ def update_book(book_id):
                 existing_book = cur.fetchone()
 
                 if existing_book is None:
-                    return {"error": "Book not found"}, 404
+                    return {
+                        "error": "Book not found"
+                    }, 404
+
+                # ---------------------------------------------
+                # Save new cover if supplied
+                # ---------------------------------------------
 
                 new_cover_filename = None
 
                 if cover is not None:
                     new_cover_filename = save_cover(cover)
 
+                # ---------------------------------------------
                 # Update only supplied fields
+                # ---------------------------------------------
+
                 cur.execute(
                     """
                     UPDATE books
                     SET
                         title = COALESCE(%s, title),
+                        isbn = COALESCE(%s, isbn),
+                        publication_year = COALESCE(
+                            %s,
+                            publication_year
+                        ),
+                        genre = COALESCE(%s, genre),
                         cover_path = COALESCE(
                             %s,
                             cover_path
@@ -255,6 +293,9 @@ def update_book(book_id):
                     """,
                     (
                         title,
+                        isbn,
+                        publication_year,
+                        genre,
                         new_cover_filename,
                         book_id,
                     ),
@@ -268,6 +309,11 @@ def update_book(book_id):
         }, 200
 
     except Exception:
+
+        current_app.logger.exception(
+            "Failed to update book"
+        )
+
         return {
             "error": "Failed to update book"
         }, 500
@@ -277,13 +323,15 @@ def update_book(book_id):
 # DELETE
 # ---------------------------------------------------------
 
-@book_bp.route("/update/<int:book_id>", methods=["DELETE"])
+@book_bp.route("/<int:book_id>", methods=["DELETE"])
 @jwt_required()
 @role_required(ROLE_LIBRARIAN)
 def delete_book(book_id):
 
     try:
+
         with get_db() as conn:
+
             with conn.cursor() as cur:
 
                 cur.execute(
@@ -300,7 +348,9 @@ def delete_book(book_id):
             conn.commit()
 
         if deleted is None:
-            return {"error": "Book not found"}, 404
+            return {
+                "error": "Book not found"
+            }, 404
 
         return {
             "message": "Book deleted",
@@ -308,7 +358,11 @@ def delete_book(book_id):
         }, 200
 
     except Exception:
+
+        current_app.logger.exception(
+            "Failed to delete book"
+        )
+
         return {
             "error": "Failed to delete book"
         }, 500
-

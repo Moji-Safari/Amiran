@@ -7,7 +7,7 @@ from db.database import get_db
 
 loan_bp = Blueprint("loan", __name__, url_prefix="/loan")
 
-#member information
+
 def get_member_by_user_id(user_id):
     with get_db() as conn:
         with conn.cursor() as cur:
@@ -69,7 +69,7 @@ def create_request():
                     SELECT COUNT(*)
                     FROM loan
                     WHERE memb_id = %s
-                      AND loanstatus_id IN (1, 2,4)
+                      AND loanstatus_id IN (1, 2, 4)
                     """,
                     (member_id,),
                 )

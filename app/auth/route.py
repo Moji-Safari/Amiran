@@ -1,6 +1,7 @@
 import re
 from functools import wraps
 
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (
     create_access_token,

@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-
+from app.auth.route import ROLE_LIBRARIAN, ROLE_MEMBER, role_required
 from app.db.database import get_db
 from app.auth.decorators import role_required
 from app.auth.constants import ROLE_LIBRARIAN
