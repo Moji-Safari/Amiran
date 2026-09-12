@@ -1,0 +1,69 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### List books (any authenticated)
+GET {{baseUrl}}/books/
+Authorization: Bearer {{memberToken}}
+
+### Get one book (any authenticated)
+GET {{baseUrl}}/books/1
+Authorization: Bearer {{memberToken}}
+
+### Create book (librarian, no cover)
+POST {{baseUrl}}/books/
+Authorization: Bearer {{librarianToken}}
+Content-Type: multipart/form-data; boundary=----BoundaryXYZ
+
+------BoundaryXYZ
+Content-Disposition: form-data; name="title"
+
+The Hobbit
+------BoundaryXYZ
+Content-Disposition: form-data; name="isbn"
+
+9780000001
+------BoundaryXYZ
+Content-Disposition: form-data; name="publication_year"
+
+1937
+------BoundaryXYZ
+Content-Disposition: form-data; name="genre"
+
+Fantasy
+------BoundaryXYZ--
+
+### Create book (librarian, with cover)
+# Save a small JPG as http/sample-cover.jpg next to this file first.
+POST {{baseUrl}}/books/
+Authorization: Bearer {{librarianToken}}
+Content-Type: multipart/form-data; boundary=----BoundaryXYZ
+
+------BoundaryXYZ
+Content-Disposition: form-data; name="title"
+
+Cover Book
+------BoundaryXYZ
+Content-Disposition: form-data; name="genre"
+
+Fantasy
+------BoundaryXYZ
+Content-Disposition: form-data; name="cover"; filename="sample-cover.jpg"
+Content-Type: image/jpeg
+
+< ./sample-cover.jpg
+------BoundaryXYZ--
+
+### Update book (librarian)
+PATCH {{baseUrl}}/books/1
+Authorization: Bearer {{librarianToken}}
+Content-Type: multipart/form-data; boundary=----BoundaryXYZ
+
+------BoundaryXYZ
+Content-Disposition: form-data; name="title"
+
+Updated Title
+------BoundaryXYZ--
+
+### Delete book (librarian)
+DELETE {{baseUrl}}/books/1
+Authorization: Bearer {{librarianToken}}

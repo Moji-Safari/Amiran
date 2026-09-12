@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Create loan request (member)
+# Requires a book to exist. Book 1 from books.http is fine.
+POST {{baseUrl}}/loan/demand
+Authorization: Bearer {{memberToken}}
+Content-Type: {{contentType}}
+
+{
+  "book_id": 1
+}
+
+### List pending loans (librarian)
+GET {{baseUrl}}/loan/approved/1
+Authorization: Bearer {{librarianToken}}
+
+### Approve a pending loan (librarian)
+# state=1 because the loan is currently pending (status id 1).
+POST {{baseUrl}}/loan/approved/1
+Authorization: Bearer {{librarianToken}}
+Content-Type: {{contentType}}
+
+{
+  "loan_id": 1,
+  "due_date": "2026-10-01",
+  "return_date": null
+}
+
+### Borrow (member)
+# Only works if the loan is currently in pending state (id 1).
+POST {{baseUrl}}/loan/borrow
+Authorization: Bearer {{memberToken}}
+Content-Type: {{contentType}}
+
+{
+  "loan_id": 1
+}
+
+### Cancel a loan (member)
+# Route sets status to borrowed (id 4). Only allowed from pending or approved.
+DELETE {{baseUrl}}/loan/cancel/1
+Authorization: Bearer {{memberToken}}

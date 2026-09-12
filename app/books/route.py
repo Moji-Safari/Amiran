@@ -1,12 +1,13 @@
 from flask import Blueprint, current_app, request
 from flask_jwt_extended import jwt_required
-from app.auth.route import ROLE_LIBRARIAN, ROLE_MEMBER, role_required
 
-from app.auth.constants import ROLE_LIBRARIAN
-from app.auth.decorators import role_required
+from app.auth.route import (
+    ROLE_LIBRARIAN,
+    role_required,
+)
+from db.database import get_db
 from app.utils.file_storage import save_cover
 from app.utils.validator import validate_cover
-from app.db.database import get_db
 
 
 book_bp = Blueprint(
@@ -16,22 +17,17 @@ book_bp = Blueprint(
 )
 
 
-# ---------------------------------------------------------
-# CREATE
-# ---------------------------------------------------------
-
 @book_bp.route("/", methods=["POST"])
-@jwt_required()
 @role_required(ROLE_LIBRARIAN)
 def create_book():
-
-    title = request.form.get("title")
+    title = (request.form.get("title") or "").strip()
     isbn = request.form.get("isbn")
     publication_year = request.form.get(
         "publication_year",
         type=int,
     )
     genre = request.form.get("genre")
+    cover = request.files.get("cover")
 
     if not title:
         return {"error": "title is required"}, 400
@@ -41,19 +37,19 @@ def create_book():
             "error": "title must be at most 255 characters"
         }, 400
 
-    cover = request.files.get("cover")
-
     error = validate_cover(cover)
 
     if error:
         return {"error": error}, 400
 
+    cover_filename = None
+
     try:
-        cover_filename = save_cover(cover)
+        if cover is not None:
+            cover_filename = save_cover(cover)
 
         with get_db() as conn:
             with conn.cursor() as cur:
-
                 cur.execute(
                     """
                     INSERT INTO books (
@@ -94,18 +90,12 @@ def create_book():
         }, 500
 
 
-# ---------------------------------------------------------
-# READ ALL
-# ---------------------------------------------------------
-
 @book_bp.route("/", methods=["GET"])
 @jwt_required()
 def get_books():
-
     try:
         with get_db() as conn:
             with conn.cursor() as cur:
-
                 cur.execute(
                     """
                     SELECT
@@ -137,18 +127,12 @@ def get_books():
         }, 500
 
 
-# ---------------------------------------------------------
-# READ ONE
-# ---------------------------------------------------------
-
 @book_bp.route("/<int:book_id>", methods=["GET"])
 @jwt_required()
 def get_book(book_id):
-
     try:
         with get_db() as conn:
             with conn.cursor() as cur:
-
                 cur.execute(
                     """
                     SELECT
@@ -184,15 +168,9 @@ def get_book(book_id):
         }, 500
 
 
-# ---------------------------------------------------------
-# UPDATE
-# ---------------------------------------------------------
-
 @book_bp.route("/<int:book_id>", methods=["PATCH"])
-@jwt_required()
 @role_required(ROLE_LIBRARIAN)
 def update_book(book_id):
-
     title = request.form.get("title")
     isbn = request.form.get("isbn")
     publication_year = request.form.get(
@@ -200,14 +178,10 @@ def update_book(book_id):
         type=int,
     )
     genre = request.form.get("genre")
-
     cover = request.files.get("cover")
 
-    # ---------------------------------------------
-    # Validate supplied fields
-    # ---------------------------------------------
-
     if title is not None:
+        title = title.strip()
 
         if not title:
             return {
@@ -219,32 +193,22 @@ def update_book(book_id):
                 "error": "title must be at most 255 characters"
             }, 400
 
-    if publication_year is not None:
-
-        if publication_year <= 0:
-            return {
-                "error": "publication_year must be positive"
-            }, 400
+    if publication_year is not None and publication_year <= 0:
+        return {
+            "error": "publication_year must be positive"
+        }, 400
 
     if cover is not None:
-
         error = validate_cover(cover)
 
         if error:
-            return {
-                "error": error
-            }, 400
+            return {"error": error}, 400
+
+    new_cover_filename = None
 
     try:
-
         with get_db() as conn:
-
             with conn.cursor() as cur:
-
-                # ---------------------------------------------
-                # Check that book exists
-                # ---------------------------------------------
-
                 cur.execute(
                     """
                     SELECT cover_path
@@ -261,18 +225,8 @@ def update_book(book_id):
                         "error": "Book not found"
                     }, 404
 
-                # ---------------------------------------------
-                # Save new cover if supplied
-                # ---------------------------------------------
-
-                new_cover_filename = None
-
                 if cover is not None:
                     new_cover_filename = save_cover(cover)
-
-                # ---------------------------------------------
-                # Update only supplied fields
-                # ---------------------------------------------
 
                 cur.execute(
                     """
@@ -309,7 +263,6 @@ def update_book(book_id):
         }, 200
 
     except Exception:
-
         current_app.logger.exception(
             "Failed to update book"
         )
@@ -319,21 +272,12 @@ def update_book(book_id):
         }, 500
 
 
-# ---------------------------------------------------------
-# DELETE
-# ---------------------------------------------------------
-
 @book_bp.route("/<int:book_id>", methods=["DELETE"])
-@jwt_required()
 @role_required(ROLE_LIBRARIAN)
 def delete_book(book_id):
-
     try:
-
         with get_db() as conn:
-
             with conn.cursor() as cur:
-
                 cur.execute(
                     """
                     DELETE FROM books
@@ -358,7 +302,6 @@ def delete_book(book_id):
         }, 200
 
     except Exception:
-
         current_app.logger.exception(
             "Failed to delete book"
         )

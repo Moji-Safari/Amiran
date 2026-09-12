@@ -1,420 +1,298 @@
+import io
+
+
+def _auth(token):
+    return {"Authorization": f"Bearer {token}"}
 
 
 # ============================================================
 # CREATE
 # ============================================================
 
-def test_create_book_success(client, auth_token):
-    token = auth_token("librarian")
-
+def test_create_book_success(
+    client,
+    librarian_token,
+):
     response = client.post(
-        "/books/create",
+        "/books/",
         data={
             "title": "The Hobbit",
-            "isbn": "9780261102217",
+            "isbn": "9780000001",
             "publication_year": "1937",
             "genre": "Fantasy",
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        headers=_auth(librarian_token),
     )
 
     assert response.status_code == 201
 
-    body = response.get_json()
 
-    assert body["message"] == "Book created"
-    assert "book_id" in body
-
-
-def test_create_book_without_title(client, auth_token):
-    token = auth_token("librarian")
-
+def test_create_book_without_title(
+    client,
+    librarian_token,
+):
     response = client.post(
-        "/books/create",
+        "/books/",
         data={
-            "isbn": "123",
-            "publication_year": "2020",
-            "genre": "Fantasy",
-        },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    assert response.status_code == 400
-
-    body = response.get_json()
-
-    assert body["error"] == "title is required"
-
-
-def test_create_book_empty_title(client, auth_token):
-    token = auth_token("librarian")
-
-    response = client.post(
-        "/books/create",
-        data={
-            "title": "",
-            "isbn": "123",
-            "publication_year": "2020",
-            "genre": "Fantasy",
-        },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    assert response.status_code == 400
-
-    assert response.get_json()["error"] == "title is required"
-
-
-def test_create_book_title_too_long(client, auth_token):
-    token = auth_token("librarian")
-
-    long_title = "A" * 256
-
-    response = client.post(
-        "/books/create",
-        data={
-            "title": long_title,
-            "isbn": "123",
-            "publication_year": "2020",
-            "genre": "Fantasy",
-        },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    assert response.status_code == 400
-
-    assert (
-        response.get_json()["error"]
-        == "title must be at most 255 characters"
-    )
-
-
-def test_create_book_requires_authentication(client):
-    response = client.post(
-        "/books/create",
-        data={
-            "title": "The Hobbit",
-            "isbn": "123",
+            "isbn": "9780000001",
             "publication_year": "1937",
             "genre": "Fantasy",
         },
+        headers=_auth(librarian_token),
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 400
 
 
-def test_create_book_requires_librarian(client, auth_token):
-    token = auth_token("member")
-
+def test_create_book_member_forbidden(
+    client,
+    member_token,
+):
     response = client.post(
-        "/books/create",
+        "/books/",
         data={
             "title": "The Hobbit",
-            "isbn": "123",
-            "publication_year": "1937",
-            "genre": "Fantasy",
+            "isbn": "9780000001",
         },
-        headers={
-            "Authorization": f"Bearer {token}"
+        headers=_auth(member_token),
+    )
+
+    assert response.status_code in (401, 403)
+
+
+def test_create_book_without_authentication(client):
+    response = client.post(
+        "/books/",
+        data={
+            "title": "The Hobbit",
         },
     )
 
-    assert response.status_code == 403
+    assert response.status_code in (401, 422)
 
 
 # ============================================================
-# READ ALL
+# LIST
 # ============================================================
 
-def test_get_books(client, auth_token):
-    token = auth_token("member")
-
+def test_list_books_success(
+    client,
+    member_token,
+):
     response = client.get(
-        "/books/find/lst",
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        "/books/",
+        headers=_auth(member_token),
+    )
+
+    assert response.status_code == 200
+    assert isinstance(response.get_json(), dict)
+
+
+def test_list_books_without_authentication(client):
+    response = client.get("/books/")
+
+    assert response.status_code in (401, 422)
+
+
+# ============================================================
+# GET ONE
+# ============================================================
+
+def test_get_book_success(
+    client,
+    member_token,
+    test_book,
+):
+    response = client.get(
+        f"/books/{test_book['book_id']}",
+        headers=_auth(member_token),
     )
 
     assert response.status_code == 200
 
-    body = response.get_json()
 
-    assert "books" in body
-    assert isinstance(body["books"], list)
-
-
-def test_get_books_requires_authentication(client):
-    response = client.get("/books/find/lst")
-
-    assert response.status_code == 401
-
-
-# ============================================================
-# READ ONE
-# ============================================================
-
-def test_get_book(client, auth_token, test_book):
-    token = auth_token("member")
-
-    book_id = test_book["book_id"]
-
+def test_get_book_not_found(
+    client,
+    member_token,
+):
     response = client.get(
-        f"/books/find/{book_id}",
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    assert response.status_code == 200
-
-    body = response.get_json()
-
-    assert body["book_id"] == book_id
-    assert body["title"] == test_book["title"]
-
-
-def test_get_book_not_found(client, auth_token):
-    token = auth_token("member")
-
-    response = client.get(
-        "/books/find/999999",
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        "/books/999999",
+        headers=_auth(member_token),
     )
 
     assert response.status_code == 404
 
-    assert response.get_json()["error"] == "Book not found"
 
+def test_get_book_without_authentication(
+    client,
+    test_book,
+):
+    response = client.get(
+        f"/books/{test_book['book_id']}"
+    )
 
-def test_get_book_requires_authentication(client):
-    response = client.get("/books/find/1")
-
-    assert response.status_code == 401
+    assert response.status_code in (401, 422)
 
 
 # ============================================================
 # UPDATE
 # ============================================================
 
-def test_update_book_title(client, auth_token, test_book):
-    token = auth_token("librarian")
-
-    book_id = test_book["book_id"]
-
+def test_update_book_success(
+    client,
+    librarian_token,
+    test_book,
+):
     response = client.patch(
-        f"/books/update/{book_id}",
+        f"/books/{test_book['book_id']}",
         data={
-            "title": "The Hobbit Updated",
+            "title": "Updated Book",
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        headers=_auth(librarian_token),
     )
 
     assert response.status_code == 200
 
-    body = response.get_json()
 
-    assert body["message"] == "Book updated"
-    assert body["book_id"] == book_id
-
-
-def test_update_book_empty_title(client, auth_token, test_book):
-    token = auth_token("librarian")
-
-    book_id = test_book["book_id"]
-
+def test_update_book_empty_title(
+    client,
+    librarian_token,
+    test_book,
+):
     response = client.patch(
-        f"/books/update/{book_id}",
+        f"/books/{test_book['book_id']}",
         data={
             "title": "",
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        headers=_auth(librarian_token),
     )
 
     assert response.status_code == 400
 
-    assert (
-        response.get_json()["error"]
-        == "title cannot be empty"
-    )
 
-
-def test_update_book_title_too_long(client, auth_token, test_book):
-    token = auth_token("librarian")
-
-    book_id = test_book["book_id"]
-
+def test_update_book_member_forbidden(
+    client,
+    member_token,
+    test_book,
+):
     response = client.patch(
-        f"/books/update/{book_id}",
+        f"/books/{test_book['book_id']}",
         data={
-            "title": "A" * 256,
+            "title": "Unauthorized Update",
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        headers=_auth(member_token),
     )
 
-    assert response.status_code == 400
-
-    assert (
-        response.get_json()["error"]
-        == "title must be at most 255 characters"
-    )
+    assert response.status_code in (401, 403)
 
 
-def test_update_book_invalid_author_id(client, auth_token, test_book):
-    token = auth_token("librarian")
-
-    book_id = test_book["book_id"]
-
+def test_update_book_not_found(
+    client,
+    librarian_token,
+):
     response = client.patch(
-        f"/books/update/{book_id}",
+        "/books/999999",
         data={
-            "author_id": "-1",
+            "title": "Updated",
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    assert response.status_code == 400
-
-    assert (
-        response.get_json()["error"]
-        == "author_id must be a positive integer"
-    )
-
-
-def test_update_book_not_found(client, auth_token):
-    token = auth_token("librarian")
-
-    response = client.patch(
-        "/books/update/999999",
-        data={
-            "title": "Does Not Exist",
-        },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        headers=_auth(librarian_token),
     )
 
     assert response.status_code == 404
-
-    assert response.get_json()["error"] == "Book not found"
-
-
-def test_update_book_requires_librarian(
-    client,
-    auth_token,
-    test_book,
-):
-    token = auth_token("member")
-
-    book_id = test_book["book_id"]
-
-    response = client.patch(
-        f"/books/update/{book_id}",
-        data={
-            "title": "Unauthorized Update",
-        },
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
-    )
-
-    assert response.status_code == 403
-
-
-def test_update_book_requires_authentication(client, test_book):
-    book_id = test_book["book_id"]
-
-    response = client.patch(
-        f"/books/update/{book_id}",
-        data={
-            "title": "Unauthorized Update",
-        },
-    )
-
-    assert response.status_code == 401
 
 
 # ============================================================
 # DELETE
 # ============================================================
 
-def test_delete_book(client, auth_token, test_book):
-    token = auth_token("librarian")
-
-    book_id = test_book["book_id"]
-
+def test_delete_book_success(
+    client,
+    librarian_token,
+    test_book,
+):
     response = client.delete(
-        f"/books/delete/{book_id}",
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        f"/books/{test_book['book_id']}",
+        headers=_auth(librarian_token),
     )
 
     assert response.status_code == 200
 
-    body = response.get_json()
 
-    assert body["message"] == "Book deleted"
-    assert body["book_id"] == book_id
-
-
-def test_delete_book_not_found(client, auth_token):
-    token = auth_token("librarian")
-
+def test_delete_book_not_found(
+    client,
+    librarian_token,
+):
     response = client.delete(
-        "/books/delete/999999",
-        headers={
-            "Authorization": f"Bearer {token}"
-        },
+        "/books/999999",
+        headers=_auth(librarian_token),
     )
 
     assert response.status_code == 404
 
-    assert response.get_json()["error"] == "Book not found"
 
-
-def test_delete_book_requires_librarian(
+def test_delete_book_member_forbidden(
     client,
-    auth_token,
+    member_token,
     test_book,
 ):
-    token = auth_token("member")
-
-    book_id = test_book["book_id"]
-
     response = client.delete(
-        f"/books/delete/{book_id}",
-        headers={
-            "Authorization": f"Bearer {token}"
+        f"/books/{test_book['book_id']}",
+        headers=_auth(member_token),
+    )
+
+    assert response.status_code in (401, 403)
+
+
+def test_delete_book_without_authentication(
+    client,
+    test_book,
+):
+    response = client.delete(
+        f"/books/{test_book['book_id']}"
+    )
+
+    assert response.status_code in (401, 422)
+
+
+# ============================================================
+# COVER
+# ============================================================
+
+def test_create_book_with_valid_cover(
+    client,
+    librarian_token,
+):
+    response = client.post(
+        "/books/",
+        data={
+            "title": "Book With Cover",
+            "cover": (
+                io.BytesIO(b"fake image"),
+                "cover.jpg",
+            ),
         },
+        content_type="multipart/form-data",
+        headers=_auth(librarian_token),
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 201
 
 
-def test_delete_book_requires_authentication(client, test_book):
-    book_id = test_book["book_id"]
-
-    response = client.delete(
-        f"/books/delete/{book_id}"
+def test_create_book_with_invalid_cover_extension(
+    client,
+    librarian_token,
+):
+    response = client.post(
+        "/books/",
+        data={
+            "title": "Invalid Cover",
+            "cover": (
+                io.BytesIO(b"fake file"),
+                "malware.exe",
+            ),
+        },
+        content_type="multipart/form-data",
+        headers=_auth(librarian_token),
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 400

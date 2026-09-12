@@ -1,0 +1,83 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Signup (member)
+# Creates a member account. Role is assigned by the database (default 'member').
+POST {{baseUrl}}/auth/signup
+Content-Type: {{contentType}}
+
+{
+  "email": "member@example.com",
+  "password": "Password123!"
+}
+
+### Signup (librarian)
+# Creates a second account. Promote to librarian with the SQL at the bottom of this file.
+POST {{baseUrl}}/auth/signup
+Content-Type: {{contentType}}
+
+{
+  "email": "librarian@example.com",
+  "password": "Password123!"
+}
+
+### Login (member)
+# @name memberLogin
+# Saves access_token into {{memberToken}} for use in other files.
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "identifier": "member@example.com",
+  "password": "Password123!"
+}
+
+> {%
+  client.global.set("memberToken", response.body.access_token);
+  client.global.set("memberRefreshToken", response.body.refresh_token);
+%}
+
+### Login (librarian)
+# @name librarianLogin
+# Saves access_token into {{librarianToken}}.
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "identifier": "librarian@example.com",
+  "password": "Password123!"
+}
+
+> {%
+  client.global.set("librarianToken", response.body.access_token);
+%}
+
+### Refresh (member)
+# Uses the refresh token from Login (member). Returns a new access_token.
+POST {{baseUrl}}/auth/refresh
+Authorization: Bearer {{memberRefreshToken}}
+
+### Me (member)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{memberToken}}
+
+### Guest area (any authenticated role)
+GET {{baseUrl}}/auth/guest-area
+Authorization: Bearer {{memberToken}}
+
+### Member area (member or higher)
+GET {{baseUrl}}/auth/member-area
+Authorization: Bearer {{memberToken}}
+
+### Admin area (librarian only)
+GET {{baseUrl}}/auth/admin-area
+Authorization: Bearer {{librarianToken}}
+
+
+### SQL: promote a user to librarian
+# Run this in psql if librarian@example.com was created with role='member'.
+#
+# UPDATE users SET role = 'librarian' WHERE email = 'librarian@example.com';
+# INSERT INTO librarian (user_id, name, email)
+#   SELECT user_id, 'Librarian', email FROM users
+#   WHERE email = 'librarian@example.com';

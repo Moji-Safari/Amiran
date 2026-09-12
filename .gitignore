@@ -21,3 +21,7 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+# Local HTTP client secrets / environments
+http/*.local.http
+http/.env
+.http-client.env.json

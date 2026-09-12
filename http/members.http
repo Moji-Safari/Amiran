@@ -1,0 +1,44 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Create member (librarian)
+# Requires branch_id=1 to exist. If not, create a branch first (see SQL at bottom).
+POST {{baseUrl}}/members/create
+Authorization: Bearer {{librarianToken}}
+Content-Type: {{contentType}}
+
+{
+  "branch_id": 1,
+  "first_name": "Ali",
+  "last_name": "Rezaei",
+  "email": "ali@example.com",
+  "phone": "09120000000",
+  "membership_type": "standard"
+}
+
+### Find member by id (any authenticated)
+GET {{baseUrl}}/members/find/1
+Authorization: Bearer {{memberToken}}
+
+### List members with search + pagination (any authenticated)
+GET {{baseUrl}}/members/lst?search=Ali&page=1&limit=10
+Authorization: Bearer {{memberToken}}
+
+### Update member (librarian)
+PATCH {{baseUrl}}/members/update/1
+Authorization: Bearer {{librarianToken}}
+Content-Type: {{contentType}}
+
+{
+  "phone": "09121111111"
+}
+
+### Delete member (librarian)
+DELETE {{baseUrl}}/members/delete/1
+Authorization: Bearer {{librarianToken}}
+
+
+### SQL: create a branch if none exists
+# Run in psql:
+# INSERT INTO branches (branch_name, address, phone)
+# VALUES ('Main Branch', '123 Main St', '555-0000');
