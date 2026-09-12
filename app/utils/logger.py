@@ -5,13 +5,7 @@ from logging.handlers import RotatingFileHandler
 
 
 def setup_logging(app):
-    """
-    Configure application logging.
-
-    Logs are written to:
-        - console
-        - logs/app.log
-    """
+   
 
     log_dir = os.path.join(
         app.root_path,

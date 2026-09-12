@@ -1,0 +1,34 @@
+@memberToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyMTI5NCwianRpIjoiNjMzYWE1NTctYTdlZi00NWRjLTkwZWEtOTExYTgzYjU4ZjYxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3ODkyMjEyOTQsImNzcmYiOiIyYjVjY2IzYS0yN2IxLTQ4N2YtYTYxMS05NzBmYzVlZTMzNWQiLCJleHAiOjE3ODkyMjIxOTR9.oNFb4B89EDpbmLIP4s7mbMg22BNOZk-JbT5Il1R0ypM
+@librarianToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyMTM1MywianRpIjoiOWZkZTU3NzItYWI4OC00YjUxLWI1ZjAtZGJiY2ZjMGYzODdmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjIiLCJuYmYiOjE3ODkyMjEzNTMsImNzcmYiOiJhMTgzNDIwZC02Mjg5LTQwYTgtYTg2ZS1kMmFjMWU3MzlmNzkiLCJleHAiOjE3ODkyMjIyNTN9.xrXfBbDZN1_lRTuGVwS9pkwU-QLFvovipRYCDVp_HZo
+@memberRefreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNTg0MiwianRpIjoiZWZkNTcwYjUtZGE1Mi00NzdiLTgzYWMtZDUxYjBkNWMwNzQwIiwidHlwZSI6InJlZnJlc2giLCJzdWIiOiIxIiwibmJmIjoxNzg5MjI1ODQyLCJjc3JmIjoiZDY3NDI2MGMtMGUxNy00MTc4LWEzMWMtNzkzMjIzYmMwMWI5IiwiZXhwIjoxNzkxODE3ODQyfQ.VicVhFhIlFu0F0IyT9oNyDOWRGdYVIEK2ST4K0tzipc
+@baseUrl = http://127.0.0.1:5000
+
+### Get quiz
+GET {{baseUrl}}/tests/1
+Authorization: Bearer {{memberToken}}
+
+### Submit quiz
+POST {{baseUrl}}/tests/1/submit
+Authorization: Bearer {{memberToken}}
+Content-Type: application/json
+
+{
+  "answers": [
+    {
+      "question_id": 1,
+      "answer_id": 1
+    }
+  ]
+}
+
+
+### SQL: create a minimal quiz
+# Run in psql:
+# INSERT INTO test_task (title, description, max_score)
+# VALUES ('Personality', 'Short test', 10);
+#
+# INSERT INTO test_questions (question_text, FK_test_teast_id, question_type)
+# VALUES ('Do you like reading?', 1, 'single_choice');
+#
+# INSERT INTO test_answers (FK_tst_que_id, answer_text, is_correct)
+# VALUES (1, 'Yes', TRUE), (1, 'No', FALSE);

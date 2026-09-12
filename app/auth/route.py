@@ -1,7 +1,7 @@
 import re
 from functools import wraps
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -50,9 +50,7 @@ PHONE_RE = re.compile(
 
 
 def role_required(required_role):
-    """
-    Require JWT authentication and a sufficient role.
-    """
+    
 
     if required_role not in _VALID_ROLES:
         raise ValueError("Invalid required role")
@@ -227,6 +225,13 @@ def signup():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json(silent=True) or {}
+    
+    current_app.logger.warning(
+    "LOGIN DEBUG: data=%r content_type=%r raw=%r",
+    data,
+    request.content_type,
+    request.get_data(as_text=True),
+)
 
     identifier = (
         data.get("identifier")

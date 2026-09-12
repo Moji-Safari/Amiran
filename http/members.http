@@ -1,11 +1,13 @@
-@baseUrl = http://localhost:5000
-@contentType = application/json
+@memberToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNzMyNSwianRpIjoiMjY0NGY5ZGUtYTYyNC00Yzk1LThhMDQtOGU5MzA4OTBlNmM2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3ODkyMjczMjUsImNzcmYiOiJmMmRkNzc0YS0zYmIxLTRlNDUtYjU0NC1lMTYzNWU0YzEzZTciLCJleHAiOjE3ODkyMjgyMjV9.qxVdleFZnsxS5z-tUgHSNBZ82P2ipBxxZFkM1G4ihhU
+@librarianToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNzM3MSwianRpIjoiNzk2MGEyYTQtZTZhNC00Mjk2LWJhYWMtZGNmYjcwMjdjYjJlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjIiLCJuYmYiOjE3ODkyMjczNzEsImNzcmYiOiI5YzViZmQxYS1kYjMzLTRmNmQtYjU2NC0wYzRkYzFlMjQyNjUiLCJleHAiOjE3ODkyMjgyNzF9.aBGNOzz7yilvu7oGf_UMZ5-MLjy9Lsoq3_Omas1aZ5k
+@memberRefreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNzMyNSwianRpIjoiNjM3OTk3MTgtN2Q2Mi00Zjk4LWJjMDEtYjQ5ZGJiNjY4NDQ0IiwidHlwZSI6InJlZnJlc2giLCJzdWIiOiIxIiwibmJmIjoxNzg5MjI3MzI1LCJjc3JmIjoiZDgxZmFhNTUtMGRjNi00OGMwLWI4MTctMGY1NzMzOTQ1ZGUwIiwiZXhwIjoxNzkxODE5MzI1fQ.-TZqJhnyZWfJfWNOgi2S2m2cIWcLg1FJzm481MJZ2VQ
+@baseUrl = http://127.0.0.1:5000
 
 ### Create member (librarian)
-# Requires branch_id=1 to exist. If not, create a branch first (see SQL at bottom).
+# Requires a branch to exist with id=1. Create one with the SQL at the bottom.
 POST {{baseUrl}}/members/create
 Authorization: Bearer {{librarianToken}}
-Content-Type: {{contentType}}
+Content-Type: application/json
 
 {
   "branch_id": 1,
@@ -16,18 +18,18 @@ Content-Type: {{contentType}}
   "membership_type": "standard"
 }
 
-### Find member by id (any authenticated)
+### Find member by id
 GET {{baseUrl}}/members/find/1
 Authorization: Bearer {{memberToken}}
 
-### List members with search + pagination (any authenticated)
+### List members
 GET {{baseUrl}}/members/lst?search=Ali&page=1&limit=10
 Authorization: Bearer {{memberToken}}
 
 ### Update member (librarian)
 PATCH {{baseUrl}}/members/update/1
 Authorization: Bearer {{librarianToken}}
-Content-Type: {{contentType}}
+Content-Type: application/json
 
 {
   "phone": "09121111111"
@@ -38,7 +40,7 @@ DELETE {{baseUrl}}/members/delete/1
 Authorization: Bearer {{librarianToken}}
 
 
-### SQL: create a branch if none exists
+### SQL if branch 1 doesn't exist
 # Run in psql:
 # INSERT INTO branches (branch_name, address, phone)
 # VALUES ('Main Branch', '123 Main St', '555-0000');

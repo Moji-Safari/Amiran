@@ -1,11 +1,14 @@
-@baseUrl = http://localhost:5000
-@contentType = application/json
+@memberToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNzMyNSwianRpIjoiMjY0NGY5ZGUtYTYyNC00Yzk1LThhMDQtOGU5MzA4OTBlNmM2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3ODkyMjczMjUsImNzcmYiOiJmMmRkNzc0YS0zYmIxLTRlNDUtYjU0NC1lMTYzNWU0YzEzZTciLCJleHAiOjE3ODkyMjgyMjV9.qxVdleFZnsxS5z-tUgHSNBZ82P2ipBxxZFkM1G4ihhU
+@librarianToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNzM3MSwianRpIjoiNzk2MGEyYTQtZTZhNC00Mjk2LWJhYWMtZGNmYjcwMjdjYjJlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjIiLCJuYmYiOjE3ODkyMjczNzEsImNzcmYiOiI5YzViZmQxYS1kYjMzLTRmNmQtYjU2NC0wYzRkYzFlMjQyNjUiLCJleHAiOjE3ODkyMjgyNzF9.aBGNOzz7yilvu7oGf_UMZ5-MLjy9Lsoq3_Omas1aZ5k
+@memberRefreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4OTIyNzMyNSwianRpIjoiNjM3OTk3MTgtN2Q2Mi00Zjk4LWJjMDEtYjQ5ZGJiNjY4NDQ0IiwidHlwZSI6InJlZnJlc2giLCJzdWIiOiIxIiwibmJmIjoxNzg5MjI3MzI1LCJjc3JmIjoiZDgxZmFhNTUtMGRjNi00OGMwLWI4MTctMGY1NzMzOTQ1ZGUwIiwiZXhwIjoxNzkxODE5MzI1fQ.-TZqJhnyZWfJfWNOgi2S2m2cIWcLg1FJzm481MJZ2VQ
+
+@baseUrl = http://127.0.0.1:5000
 
 ### Create loan request (member)
-# Requires a book to exist. Book 1 from books.http is fine.
+# Requires a book to exist. Use book_id=1 if you created "The Hobbit".
 POST {{baseUrl}}/loan/demand
 Authorization: Bearer {{memberToken}}
-Content-Type: {{contentType}}
+Content-Type: application/json
 
 {
   "book_id": 1
@@ -16,10 +19,9 @@ GET {{baseUrl}}/loan/approved/1
 Authorization: Bearer {{librarianToken}}
 
 ### Approve a pending loan (librarian)
-# state=1 because the loan is currently pending (status id 1).
 POST {{baseUrl}}/loan/approved/1
 Authorization: Bearer {{librarianToken}}
-Content-Type: {{contentType}}
+Content-Type: application/json
 
 {
   "loan_id": 1,
@@ -28,16 +30,14 @@ Content-Type: {{contentType}}
 }
 
 ### Borrow (member)
-# Only works if the loan is currently in pending state (id 1).
 POST {{baseUrl}}/loan/borrow
 Authorization: Bearer {{memberToken}}
-Content-Type: {{contentType}}
+Content-Type: application/json
 
 {
   "loan_id": 1
 }
 
-### Cancel a loan (member)
-# Route sets status to borrowed (id 4). Only allowed from pending or approved.
+### Cancel (member)
 DELETE {{baseUrl}}/loan/cancel/1
 Authorization: Bearer {{memberToken}}
