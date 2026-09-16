@@ -355,3 +355,16 @@ def test_loan(db, test_member, test_book):
         "memb_id": test_member["memb_id"],
         "book_id": test_book["book_id"],
     }
+
+@pytest.fixture(autouse=True)
+def reset_limiter(app):
+    from app.extensions import limiter
+
+    if limiter._storage is not None:
+        limiter.reset()
+
+    yield
+
+    if limiter._storage is not None:
+        limiter.reset()
+

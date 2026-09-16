@@ -83,7 +83,7 @@ def create_request():
         with get_db() as conn:
             with conn.cursor() as cur:
 
-                # Make sure the book exists.
+                #  the book exists?
                 cur.execute(
                     """
                     SELECT book_id
@@ -98,7 +98,7 @@ def create_request():
                         "error": "Book not found"
                     }, 404
 
-                # Check active loans.
+                # Check if active loans?
                 cur.execute(
                     """
                     SELECT COUNT(*) AS count
@@ -123,7 +123,7 @@ def create_request():
                         )
                     }, 400
 
-                # Check whether book is unavailable.
+                # Check whether book is unavailable?
                 cur.execute(
                     """
                     SELECT 1

@@ -1,4 +1,5 @@
 from flask import current_app, jsonify
+from flask_limiter import RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
 
 
@@ -71,7 +72,13 @@ def register_error_handlers(app):
             }
         ), 500
 
-    
+    @app.errorhandler(RateLimitExceeded)
+    def handle_rate_limit(e):
+        return jsonify({
+            "error": "rate limit exceeded",
+            "message": str(e.description),
+            "code": 429,
+        }), 429
 
 
     @app.errorhandler(RequestEntityTooLarge)

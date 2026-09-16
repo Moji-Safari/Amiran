@@ -1,6 +1,6 @@
 import re
 from functools import wraps
-
+from app.extensions import limiter
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import (
     create_access_token,
@@ -13,6 +13,7 @@ from werkzeug.security import (
     generate_password_hash,
 )
 
+from config import Config
 from db.database import get_db
 
 
@@ -29,7 +30,7 @@ ROLE_MEMBER = "member"
 ROLE_LIBRARIAN = "librarian"
 ROLE_ADMIN = "admin"
 
-# Numeric ordering so we can compare "is at least".
+
 _ROLE_ORDER = {
     ROLE_GUEST: 5,
     ROLE_MEMBER: 15,
@@ -223,6 +224,7 @@ def signup():
 
 
 @auth_bp.route("/login", methods=["POST"])
+@limiter.limit(Config.RATELIMIT_LOGIN_LIMIT)
 def login():
     data = request.get_json(silent=True) or {}
     

@@ -37,6 +37,9 @@ class Config:
         os.getenv("MAX_CONTENT_LENGTH", 5 * 1024 * 1024)
     )
 
+    RATELIMIT_STORAGE_URI = "memory://"
+    RATELIMIT_LOGIN_LIMIT = "5 per minute"
+
     UPLOAD_FOLDER = os.path.join(
         BASE_DIR,
         "uploads",
