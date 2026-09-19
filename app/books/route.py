@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, request
+from flask import Blueprint, current_app, request  # noqa: I001
 from flask_jwt_extended import jwt_required
 
 from app.auth.route import (

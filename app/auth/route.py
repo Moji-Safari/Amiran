@@ -1,4 +1,4 @@
-import re
+import re  # noqa: I001
 from functools import wraps
 from app.extensions import limiter
 from flask import Blueprint, jsonify, request, current_app
@@ -24,7 +24,7 @@ auth_bp = Blueprint(
 )
 
 
-# Roles stored as strings in the users table.
+
 ROLE_GUEST = "guest"
 ROLE_MEMBER = "member"
 ROLE_LIBRARIAN = "librarian"
@@ -66,7 +66,7 @@ def role_required(required_role):
             user_id = get_jwt_identity()
 
             try:
-                with get_db() as conn:
+                with get_db() as conn:  # noqa: SIM117
                     with conn.cursor() as cur:
                         cur.execute(
                             """
@@ -424,12 +424,45 @@ def me():
         }), 500
 
 
-@auth_bp.route("/guest-area", methods=["GET"])
+@auth_bp.route("/guest-area/books", methods=["GET"])
 @role_required(ROLE_GUEST)
-def guest_area():
-    return jsonify({
-        "message": "You can access the guest area."
-    }), 200
+def guest_area_books():
+    """
+    Return the 20 most recently added books.
+    Accessible to any authenticated role (guest and above).
+    """
+    try:
+        with get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        book_id,
+                        title,
+                        isbn,
+                        publication_year,
+                        genre,
+                        added_at
+                    FROM books
+                    ORDER BY added_at DESC
+                    LIMIT 20
+                    """
+                )
+                books = cur.fetchall()
+
+        return jsonify({
+            "books": books,
+            "count": len(books),
+        }), 200
+
+    except Exception:
+        current_app.logger.exception(
+            "Failed to retrieve guest books"
+        )
+        return jsonify({
+            "error": "Failed to retrieve books",
+            "code": 500,
+        }), 500
 
 
 @auth_bp.route("/member-area", methods=["GET"])
@@ -440,9 +473,44 @@ def member_area():
     }), 200
 
 
-@auth_bp.route("/admin-area", methods=["GET"])
+@auth_bp.route("/admin-area/librarians", methods=["GET"])
 @role_required(ROLE_LIBRARIAN)
-def admin_area():
-    return jsonify({
-        "message": "You can access the librarian area."
-    }), 200
+def admin_area_librarians():
+    """
+    Return the list of librarians.
+    Accessible only to librarians.
+    """
+    try:
+        with get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        l.PK_librarian_id AS librarian_id,
+                        l.name,
+                        l.email,
+                        l.phone,
+                        l.hire_date,
+                        l.FK_branch_id AS branch_id,
+                        b.branch_name
+                    FROM librarian l
+                    LEFT JOIN branches b
+                        ON b.branch_id = l.FK_branch_id
+                    ORDER BY l.PK_librarian_id
+                    """
+                )
+                librarians = cur.fetchall()
+
+        return jsonify({
+            "librarians": librarians,
+            "count": len(librarians),
+        }), 200
+
+    except Exception:
+        current_app.logger.exception(
+            "Failed to retrieve librarians"
+        )
+        return jsonify({
+            "error": "Failed to retrieve librarians",
+            "code": 500,
+        }), 500
