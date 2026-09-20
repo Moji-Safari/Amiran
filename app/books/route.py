@@ -94,7 +94,7 @@ def create_book():
 @jwt_required()
 def get_books():
     try:
-        with get_db() as conn:
+        with get_db() as conn:  # noqa: SIM117
             with conn.cursor() as cur:
                 cur.execute(
                     """

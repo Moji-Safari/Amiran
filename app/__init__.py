@@ -35,7 +35,7 @@ def create_app(config_override=None):
 
     register_error_handlers(app)
     setup_logging(app)
-    
+
     app.register_blueprint(book_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(loan_bp)

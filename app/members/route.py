@@ -295,7 +295,7 @@ def update_member(memb_id):
     if error:
         return {"error": error}, 400
 
-    
+
     field_map = {
         "branch_id": "FK_branch_id",
         "first_name": "first_name",

@@ -51,7 +51,7 @@ PHONE_RE = re.compile(
 
 
 def role_required(required_role):
-    
+
 
     if required_role not in _VALID_ROLES:
         raise ValueError("Invalid required role")
@@ -227,7 +227,7 @@ def signup():
 @limiter.limit(Config.RATELIMIT_LOGIN_LIMIT)
 def login():
     data = request.get_json(silent=True) or {}
-    
+
     current_app.logger.warning(
     "LOGIN DEBUG: data=%r content_type=%r raw=%r",
     data,
