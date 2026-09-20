@@ -1,7 +1,6 @@
 import pytest
-
+import os
 from flask_jwt_extended import create_access_token
-
 from app import create_app
 from db.database import get_db
 
@@ -15,10 +14,13 @@ def app():
     app = create_app(
         {
             "TESTING": True,
-            "JWT_SECRET_KEY": "test-secret-key",
-            "DATABASE_URL": (
-                "postgresql://postgres:moj240028@localhost:5432/"
-                "library_test_db"
+            "JWT_SECRET_KEY": os.environ.get(
+            "JWT_SECRET_KEY",
+            "test-secret-key-at-least-32-bytes-long!!",
+),
+            "DATABASE_URL": os.environ.get(
+            "DATABASE_URL",
+            "postgresql://postgres:moj240028@localhost:5432/library_test_db",
             ),
             "DB_POOL_MIN": 1,
             "DB_POOL_MAX": 5,
@@ -356,6 +358,11 @@ def test_loan(db, test_member, test_book):
         "book_id": test_book["book_id"],
     }
 
+
+# ============================================================
+# RATE LIMITER RESET (autouse)
+# ============================================================
+
 @pytest.fixture(autouse=True)
 def reset_limiter(app):
     from app.extensions import limiter
@@ -368,3 +375,48 @@ def reset_limiter(app):
     if limiter._storage is not None:
         limiter.reset()
 
+
+# ============================================================
+# PERFORMANCE SEED FIXTURES
+# ============================================================
+
+@pytest.fixture
+def perf_quiz_seed(db):
+    with db.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO test_task (title, description, max_score)
+            VALUES (%s, %s, %s)
+            RETURNING PK_test_teast_id
+            """,
+            ("Perf Test", "desc", 10),
+        )
+        test_id = cur.fetchone()["pk_test_teast_id"]
+
+        cur.execute(
+            """
+            INSERT INTO test_questions (
+                question_text, FK_test_teast_id, question_type
+            )
+            VALUES (%s, %s, %s)
+            RETURNING PK_tst_que_id
+            """,
+            ("Q?", test_id, "single_choice"),
+        )
+        qid = cur.fetchone()["pk_tst_que_id"]
+
+        # Only ONE answer per question, because test_answers.tst_que_id
+        # has a UNIQUE constraint in the schema.
+        cur.execute(
+            """
+            INSERT INTO test_answers (
+                FK_tst_que_id, answer_text, is_correct
+            )
+            VALUES (%s, %s, %s)
+            """,
+            (qid, "Yes", True),
+        )
+
+    db.commit()
+
+    return {"test_id": test_id, "question_id": qid}
