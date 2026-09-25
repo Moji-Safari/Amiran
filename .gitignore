@@ -25,3 +25,4 @@ __pycache__/
 http/*.local.http
 http/.env
 .http-client.env.json
+.env

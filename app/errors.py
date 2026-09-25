@@ -64,7 +64,7 @@ def register_error_handlers(app):
         # Log the actual exception internally.
         current_app.logger.exception("Unhandled server exception")
 
-        # NEVER expose error details to the client.
+
         return jsonify(
             {
                 "error": "internal server error",

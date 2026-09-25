@@ -1,0 +1,14 @@
+.venv
+.venv-linux
+__pycache__
+*.pyc
+.pytest_cache
+.benchmarks
+.git
+.github
+.env
+logs
+uploads
+http
+*.md
+!README.md

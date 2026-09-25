@@ -292,9 +292,6 @@ def pending_operations(state):
 @loan_bp.route("/borrow", methods=["POST"])
 @role_required(ROLE_MEMBER)
 def borrow_book():
-    """
-    Change the member's reserved loan to borrowed.
-    """
 
     user_id = get_jwt_identity()
 
