@@ -1,5 +1,4 @@
-ALTER TABLE Test_Task
-RENAME COLUMN test_teast_id TO PK_test_teast_id;
+
 
 
 CREATE TABLE IF NOT EXISTS Test_Submissions (
