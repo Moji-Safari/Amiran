@@ -47,15 +47,15 @@ jobs:
           PGPASSWORD: postgres
         run: |
           set -e
-          psql -h localhost -U postgres -d library_test_db -f db/schema.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-11_initial.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-13_change_status.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-15_adding_user.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-20_add_columns.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-22_pic_field.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-23_changing_columns_name.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-24_answ_soul.sql
-          psql -h localhost -U postgres -d library_test_db -f migrations/2026-07-24_solution_table.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f db/schema.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-11_initial.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-13_change_status.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-15_adding_user.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-20_add_columns.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-22_pic_field.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-23_changing_columns_name.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-24_answ_soul.sql
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d library_test_db -f migrations/2026-07-24_solution_table.sql
 
       - name: Lint
         run: |

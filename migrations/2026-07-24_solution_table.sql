@@ -2,7 +2,7 @@ ALTER TABLE Test_Task
 RENAME COLUMN test_teast_id TO PK_test_teast_id;
 
 
-CREATE IF NOT EXISTS TABLE Test_Submissions (
+CREATE TABLE IF NOT EXISTS Test_Submissions (
     PK_test_submission_id SERIAL PRIMARY KEY,
     FK_memb_id INT NOT NULL
         REFERENCES Members(PK_memb_id)
